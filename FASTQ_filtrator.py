@@ -1,16 +1,40 @@
-# This is a sample Python script.
+def filter_fastq(
+        input_fastq,
+        output_fastq,
+        gc_bounds=(0, 100),
+        length_bounds=(0, 2**32),
+        quality_threshold=0
+)  -> None:
+  """
+  Filter reads from a FASTQ file based on specified criteria.
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+  Arguments:
+  input_fastq: str
+  output_fastq: str
+  gc_bounds: tuple (default (0, 100))
+  length_bounds: tuple (default (0, 2**32))
+  quality_threshold: int (default 0)
 
+  Returns None. The result in the output file.
+  """
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+  # Handle the case where a single number is passed to `gc_bounds`
+  if type(gc_bounds) == int or type(gc_bounds) == float:
+        gc_bounds = (0, gc_bounds)
 
+  # Set the path for the output file
+  from pathlib import Path  # without import?
+  output_dir = Path("filtered")
+  output_dir.mkdir(exist_ok=True)  # parents=False
+  output_path = output_dir / output_fastq
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+  # Write output file
+  with open(output_path, 'w') as outfile:
+    for header, seq, sep, qual in read_fastq(input_fastq):
+      if not check_gc_content(seq, gc_bounds):
+        continue  # Fail GC-content parameer
+      if not check_length(seq, length_bounds):
+        continue # Fail length parameter
+      if not check_quality(qual, quality_threshold):
+        continue # Fail quality parameter
+      outfile.write(f"{header}\n{seq}\n{sep}\n{qual}\n")
