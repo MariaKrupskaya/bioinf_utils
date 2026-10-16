@@ -28,13 +28,15 @@ def filter_fastq(
   output_dir.mkdir(exist_ok=True)  # parents=False
   output_path = output_dir / output_fastq
 
+  from helpers import fastq
+
   # Write output file
   with open(output_path, 'w') as outfile:
-    for header, seq, sep, qual in read_fastq(input_fastq):
-      if not check_gc_content(seq, gc_bounds):
+    for header, seq, sep, qual in fastq.read_fastq(input_fastq):
+      if not fastq.check_gc_content(seq, gc_bounds):
         continue  # Fail GC-content parameer
-      if not check_length(seq, length_bounds):
+      if not fastq.check_length(seq, length_bounds):
         continue # Fail length parameter
-      if not check_quality(qual, quality_threshold):
+      if not fastq.check_quality(qual, quality_threshold):
         continue # Fail quality parameter
       outfile.write(f"{header}\n{seq}\n{sep}\n{qual}\n")
